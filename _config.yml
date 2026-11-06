@@ -23,4 +23,4 @@ repo_name: "TBD"
 repo: ucsb-cs156-f26/proj-courses-f26-01
 owner: ucsb-cs156-f26
 repo_name: proj-courses-f26-01
-pull_requests: []
+pull_requests: [{"author":{"id":"U_kgDOCXM6Ng","is_bot":false,"login":"yifanchen729","name":""},"headRefName":"YiFan-dev-branch","number":17,"title":"Changed href to nav link to prevent refresh the page every time","url":"https://github.com/ucsb-cs156-f26/proj-courses-f26-01/pull/17"}]
