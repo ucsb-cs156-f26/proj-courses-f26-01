@@ -102,18 +102,13 @@ describe("UsersAutocomplete tests", () => {
   test("works when no users are provided", async () => {
     render(<UsersAutocomplete />);
 
-    await userEvent.type(
-      screen.getByRole("combobox"),
-      "unknown",
-    );
+    await userEvent.type(screen.getByRole("combobox"), "unknown");
 
     expect(screen.getByText("No matching users")).toBeInTheDocument();
   });
 
   test("handles users without a full name or email", async () => {
-    const partialUsers = [
-      { id: 4, givenName: "Ada", familyName: "Lovelace" },
-    ];
+    const partialUsers = [{ id: 4, givenName: "Ada", familyName: "Lovelace" }];
 
     render(<UsersAutocomplete users={partialUsers} />);
 
@@ -129,9 +124,7 @@ describe("UsersAutocomplete tests", () => {
   test("supports navigating suggestions with arrow keys", async () => {
     const onSelect = vi.fn();
 
-    render(
-      <UsersAutocomplete users={users} onSelect={onSelect} />,
-    );
+    render(<UsersAutocomplete users={users} onSelect={onSelect} />);
 
     await userEvent.type(
       screen.getByRole("combobox"),
@@ -144,9 +137,7 @@ describe("UsersAutocomplete tests", () => {
   test("ignores arrow keys when no users match", async () => {
     const onSelect = vi.fn();
 
-    render(
-      <UsersAutocomplete users={users} onSelect={onSelect} />,
-    );
+    render(<UsersAutocomplete users={users} onSelect={onSelect} />);
 
     await userEvent.type(
       screen.getByRole("combobox"),
