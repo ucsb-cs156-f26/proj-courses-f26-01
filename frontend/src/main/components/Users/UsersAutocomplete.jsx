@@ -1,13 +1,13 @@
 import { useId, useState } from "react";
 
 const UsersAutocomplete = ({
-  users = [],
+  users,
   onSearch = () => {},
   onSelect = () => {},
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [dismissedSearch, setDismissedSearch] = useState(null);
+  const [selectedIndex, setSelectedIndex] = useState();
 
   const listId = useId();
   const query = searchTerm.trim().toLowerCase();
@@ -20,41 +20,41 @@ const UsersAutocomplete = ({
   };
 
   const matchingUsers = users
-    .filter((user) => {
+    ?.filter((user) => {
       const name = getName(user).toLowerCase();
       const email = (user.email || "").toLowerCase();
 
-      return (
-        query.length >= 2 && (name.includes(query) || email.includes(query))
-      );
+      return name.includes(query) || email.includes(query);
     })
     .slice(0, 10);
 
-  const isOpen = showDropdown && query.length >= 2;
+  const isOpen = query.length >= 2 && dismissedSearch !== searchTerm;
 
   const handleChange = (event) => {
     const value = event.target.value;
 
     setSearchTerm(value);
-    setShowDropdown(true);
+    setDismissedSearch(null);
     setSelectedIndex(-1);
     onSearch(value);
   };
 
   const handleSelect = (user) => {
-    setSearchTerm(getName(user));
-    setShowDropdown(false);
+    const name = getName(user);
+
+    setSearchTerm(name);
+    setDismissedSearch(name);
     setSelectedIndex(-1);
     onSelect(user);
   };
 
   const handleKeyDown = (event) => {
     if (event.key === "Escape") {
-      setShowDropdown(false);
+      setDismissedSearch(searchTerm);
       return;
     }
 
-    if (!isOpen || matchingUsers.length === 0) {
+    if (!isOpen || !matchingUsers?.length) {
       return;
     }
 
@@ -78,7 +78,7 @@ const UsersAutocomplete = ({
       style={{ maxWidth: "500px" }}
       onBlur={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget)) {
-          setShowDropdown(false);
+          setDismissedSearch(searchTerm);
         }
       }}
     >
@@ -94,7 +94,7 @@ const UsersAutocomplete = ({
         value={searchTerm}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
-        onFocus={() => setShowDropdown(true)}
+        onFocus={() => setDismissedSearch(null)}
         role="combobox"
         aria-autocomplete="list"
         aria-expanded={isOpen}
@@ -113,7 +113,7 @@ const UsersAutocomplete = ({
           className="list-group position-absolute w-100 shadow-sm"
           style={{ zIndex: 1000 }}
         >
-          {matchingUsers.length === 0 ? (
+          {!matchingUsers?.length ? (
             <div className="list-group-item">No matching users</div>
           ) : (
             matchingUsers.map((user, index) => (
