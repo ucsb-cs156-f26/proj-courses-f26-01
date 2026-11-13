@@ -96,17 +96,117 @@ describe("CourseOverTimeDescriptionIndexPage tests", () => {
     expect(screen.getByText("COMP ENGR SEMINAR")).toBeInTheDocument();
   });
 
-  test("does not display no-results message before searching", () => {
-    render(
-      <QueryClientProvider client={queryClient}>
-        <MemoryRouter>
-          <CourseOverTimeDescriptionIndexPage />
-        </MemoryRouter>
-      </QueryClientProvider>,
-    );
+    test("displays 'No courses found' message when search returns empty results", async () => {
+      axiosMock.onGet("/api/public/description/search").reply(
+        () =>
+          new Promise((resolve) => {
+            setTimeout(() => resolve([200, []]), 100);
+          }),
+      );
+  
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter>
+            <CourseOverTimeDescriptionIndexPage />
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
 
+const selectStartQuarter = screen.getByLabelText("Start Quarter");
+await userEvent.selectOptions(selectStartQuarter, "20222");
+
+const selectEndQuarter = screen.getByLabelText("End Quarter");
+await userEvent.selectOptions(selectEndQuarter, "20222");
+
+const enterSearchTerms = screen.getByLabelText("Search Terms");
+await userEvent.type(enterSearchTerms, "CONRADDD");
+
+const submitButton = screen.getByText("Submit");
+await userEvent.click(submitButton);
+
+await waitFor(() => {
+  expect(screen.getByText(/Loading courses.../i)).toBeInTheDocument();
+  expect(
+    screen.queryByText(/No courses were found with the specified criteria./i),
+  ).not.toBeInTheDocument();
+});
+
+await waitFor(() => {
+  expect(
+    screen.getByText(/No courses were found with the specified criteria./i),
+  ).toBeInTheDocument();
+});
+
+expect(screen.queryByText(/Loading courses.../i)).not.toBeInTheDocument();
+
+expect(screen.queryByText("CourseId")).not.toBeInTheDocument();
+expect(screen.queryByText("Title")).not.toBeInTheDocument();
+});
+
+test("hides no-results message while another search is loading", async () => {
+  // First search returns no results
+  axiosMock.onGet("/api/public/description/search").reply(200, []);
+
+  render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>
+        <CourseOverTimeDescriptionIndexPage />
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+
+  const selectStartQuarter = screen.getByLabelText("Start Quarter");
+  await userEvent.selectOptions(selectStartQuarter, "20222");
+
+  const selectEndQuarter = screen.getByLabelText("End Quarter");
+  await userEvent.selectOptions(selectEndQuarter, "20222");
+
+  const enterSearchTerms = screen.getByLabelText("Search Terms");
+  await userEvent.type(enterSearchTerms, "CONRADDD");
+
+  const submitButton = screen.getByText("Submit");
+  await userEvent.click(submitButton);
+
+  // Verify the first search displays the no-results message
+  await waitFor(() => {
     expect(
-      screen.queryByText("No courses were found with the specified criteria."),
-    ).not.toBeInTheDocument();
+      screen.getByText("No courses were found with the specified criteria."),
+    ).toBeInTheDocument();
   });
+
+  // Set up a second search that stays pending
+  axiosMock.resetHandlers();
+
+  axiosMock.onGet("/api/public/description/search").reply(
+    () => new Promise(() => {}),
+  );
+
+  await userEvent.clear(enterSearchTerms);
+  await userEvent.type(enterSearchTerms, "another search");
+  await userEvent.click(submitButton);
+
+  // Verify loading is shown and the old no-results message is hidden
+  await waitFor(() => {
+    expect(screen.getByText("Loading courses...")).toBeInTheDocument();
+  });
+
+  expect(
+    screen.queryByText("No courses were found with the specified criteria."),
+  ).not.toBeInTheDocument();
+});
+
+test("does not display no-results message before searching", () => {
+  render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>
+        <CourseOverTimeDescriptionIndexPage />
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+
+  expect(
+    screen.queryByText("No courses were found with the specified criteria."),
+  ).not.toBeInTheDocument();
+});
+
 });
