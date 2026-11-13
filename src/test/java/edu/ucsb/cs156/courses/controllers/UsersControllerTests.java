@@ -5,6 +5,7 @@ package edu.ucsb.cs156.courses.controllers;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -16,6 +17,7 @@ import edu.ucsb.cs156.courses.repositories.UserRepository;
 import edu.ucsb.cs156.courses.testconfig.TestConfig;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -214,5 +216,130 @@ public class UsersControllerTests extends ControllerTestCase {
     String expectedResponseAsJson = objectMapper.writeValueAsString(expectedResponse);
     String actualResponse = response.getResponse().getContentAsString();
     assertEquals(expectedResponseAsJson, actualResponse);
+  }
+
+  @Test
+  public void searchUsers__logged_out() throws Exception {
+    mockMvc
+        .perform(get("/api/admin/users/search").param("query", "alice"))
+        .andExpect(status().isForbidden());
+  }
+
+  @WithMockUser(roles = {"USER"})
+  @Test
+  public void searchUsers__regular_user() throws Exception {
+    mockMvc
+        .perform(get("/api/admin/users/search").param("query", "alice"))
+        .andExpect(status().isForbidden());
+  }
+
+  @WithMockUser(roles = {"ADMIN", "USER"})
+  @Test
+  public void searchUsers__admin_success() throws Exception {
+    User u1 = User.builder().id(1L).fullName("Alice Smith").email("alice@ucsb.edu").build();
+
+    User u2 = User.builder().id(2L).fullName("Alicia Jones").email("alicia@ucsb.edu").build();
+
+    List<User> expectedUsers = Arrays.asList(u1, u2);
+    PageRequest pageRequest = PageRequest.of(0, 10, Direction.ASC, "fullName");
+
+    when(userRepository.searchUsers("ali", pageRequest)).thenReturn(expectedUsers);
+
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/admin/users/search").param("query", "ali"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    assertEquals(
+        objectMapper.writeValueAsString(expectedUsers),
+        response.getResponse().getContentAsString());
+
+    verify(userRepository, times(1)).searchUsers("ali", pageRequest);
+  }
+
+  @WithMockUser(roles = {"ADMIN", "USER"})
+  @Test
+  public void searchUsers__trims_whitespace() throws Exception {
+    PageRequest pageRequest = PageRequest.of(0, 10, Direction.ASC, "fullName");
+
+    when(userRepository.searchUsers("alice", pageRequest)).thenReturn(List.of());
+
+    mockMvc
+        .perform(get("/api/admin/users/search").param("query", "  alice  "))
+        .andExpect(status().isOk())
+        .andExpect(content().json("[]"));
+
+    verify(userRepository, times(1)).searchUsers("alice", pageRequest);
+  }
+
+  @WithMockUser(roles = {"ADMIN", "USER"})
+  @Test
+  public void searchUsers__short_queries() throws Exception {
+    mockMvc
+        .perform(get("/api/admin/users/search").param("query", "a"))
+        .andExpect(status().isOk())
+        .andExpect(content().json("[]"));
+
+    mockMvc
+        .perform(get("/api/admin/users/search").param("query", "  "))
+        .andExpect(status().isOk())
+        .andExpect(content().json("[]"));
+
+    mockMvc
+        .perform(get("/api/admin/users/search").param("query", ""))
+        .andExpect(status().isOk())
+        .andExpect(content().json("[]"));
+
+    verifyNoInteractions(userRepository);
+  }
+
+  @WithMockUser(roles = {"ADMIN", "USER"})
+  @Test
+  public void searchUsers__two_character_query() throws Exception {
+    PageRequest pageRequest = PageRequest.of(0, 10, Direction.ASC, "fullName");
+
+    when(userRepository.searchUsers("al", pageRequest)).thenReturn(List.of());
+
+    mockMvc
+        .perform(get("/api/admin/users/search").param("query", "al"))
+        .andExpect(status().isOk())
+        .andExpect(content().json("[]"));
+
+    verify(userRepository, times(1)).searchUsers("al", pageRequest);
+  }
+
+  @WithMockUser(roles = {"ADMIN", "USER"})
+  @Test
+  public void searchUsers__limits_to_ten() throws Exception {
+    List<User> users = new ArrayList<>();
+
+    for (int i = 0; i < 10; i++) {
+      users.add(User.builder().id(i + 1L).fullName("Test User " + i).build());
+    }
+
+    PageRequest pageRequest = PageRequest.of(0, 10, Direction.ASC, "fullName");
+
+    when(userRepository.searchUsers("test", pageRequest)).thenReturn(users);
+
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/admin/users/search").param("query", "test"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    User[] result =
+        objectMapper.readValue(response.getResponse().getContentAsString(), User[].class);
+
+    assertEquals(10, result.length);
+    verify(userRepository, times(1)).searchUsers("test", pageRequest);
+  }
+
+  @WithMockUser(roles = {"ADMIN", "USER"})
+  @Test
+  public void searchUsers__missing_query() throws Exception {
+    mockMvc.perform(get("/api/admin/users/search")).andExpect(status().isBadRequest());
+
+    verifyNoInteractions(userRepository);
   }
 }
