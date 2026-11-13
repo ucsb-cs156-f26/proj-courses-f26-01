@@ -783,6 +783,7 @@ describe("CourseOverTimeBuildingsIndexPage tests", () => {
 
     expect(screen.queryByText("CourseId")).not.toBeInTheDocument();
     expect(screen.queryByText("Title")).not.toBeInTheDocument();
+    // NO Session column
   });
 
   test("classroomOrAll returns 'ALL' when classroom is empty string", () => {
