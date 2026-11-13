@@ -51,3 +51,37 @@ Default.parameters = {
     }),
   ],
 };
+export const SummerCourses = Template.bind({});
+SummerCourses.parameters = {
+  msw: [
+    http.get("/api/systemInfo", () => {
+      return HttpResponse.json(systemInfoFixtures.showingBoth, {
+        status: 200,
+      });
+    }),
+    http.get("/api/currentUser", () => {
+      return HttpResponse.status(403); // returns 403 when not logged in
+    }),
+    http.get("/api/UCSBSubjects/all", () => {
+      return HttpResponse.json(ucsbSubjectsFixtures.threeSubjects, {
+        status: 200,
+      });
+    }),
+    http.get("/api/sections/sectionsearch", () => {
+      return HttpResponse.json(personalSectionsFixtures.singleSection, {
+        status: 200,
+      });
+    }),
+    http.get("/api/gradehistory/search", () => {
+      return HttpResponse.json(oneQuarterCourse, {
+        status: 200,
+      });
+    }),
+    http.get("/api/public/courseovertime/search", ({ request }) => {
+      toast(`Generated ${request.method} ${request.url}`);
+      return HttpResponse.json(primaryFixtures.singleSummerCourse, {
+        status: 200,
+      });
+    }),
+  ],
+};
