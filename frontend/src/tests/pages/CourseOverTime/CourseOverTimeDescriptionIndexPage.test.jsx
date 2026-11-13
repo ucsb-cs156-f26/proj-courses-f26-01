@@ -97,7 +97,6 @@ describe("CourseOverTimeDescriptionIndexPage tests", () => {
   });
 
   test("verify summer session column is in table", async () => {
-    const useBackendMutationSpy = vi.spyOn(useBackend, "useBackendMutation");
     axiosMock.onGet("/api/public/description/search").reply(200, threeSections);
 
     render(
