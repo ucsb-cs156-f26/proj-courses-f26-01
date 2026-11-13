@@ -95,4 +95,42 @@ describe("CourseOverTimeDescriptionIndexPage tests", () => {
 
     expect(screen.getByText("COMP ENGR SEMINAR")).toBeInTheDocument();
   });
+
+  test("verify summer session column is in table", async () => {
+    const useBackendMutationSpy = vi.spyOn(useBackend, "useBackendMutation");
+    axiosMock.onGet("/api/public/description/search").reply(200, threeSections);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <CourseOverTimeDescriptionIndexPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    const selectStartQuarter = screen.getByLabelText("Start Quarter");
+    await userEvent.selectOptions(selectStartQuarter, "20222");
+    const selectEndQuarter = screen.getByLabelText("End Quarter");
+    await userEvent.selectOptions(selectEndQuarter, "20222");
+    const enterSearchTerms = screen.getByLabelText("Search Terms");
+    await userEvent.type(enterSearchTerms, "data");
+    const selectCheckbox = screen.getByTestId(
+      "CourseOverTimeDescriptionSearchForm-checkbox",
+    );
+    await userEvent.click(selectCheckbox);
+
+    const submitButton = screen.getByText("Submit");
+    expect(submitButton).toBeInTheDocument();
+    axiosMock.resetHistory();
+
+    await userEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(axiosMock.history.get.length).toBeGreaterThanOrEqual(1);
+    });
+
+    expect(screen.getByText("CourseId")).toBeInTheDocument();
+    expect(screen.getByText("Title")).toBeInTheDocument();
+    expect(screen.getByText("Session")).toBeInTheDocument();
+  });
 });
