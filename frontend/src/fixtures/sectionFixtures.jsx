@@ -715,7 +715,7 @@ export const summerSections = [
       ],
     },
   },
-    {
+  {
     courseInfo: {
       quarter: "20223",
       courseId: "ECE       5  -1",
