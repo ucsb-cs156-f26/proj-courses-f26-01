@@ -123,7 +123,9 @@ const UsersAutocomplete = ({
                 type="button"
                 role="option"
                 aria-selected={selectedIndex === index}
-                className="list-group-item list-group-item-action"
+                className={`list-group-item list-group-item-action ${
+                    selectedIndex === index ? "active" : ""
+                }`}
                 onClick={() => handleSelect(user)}
               >
                 <strong>{getName(user)}</strong>

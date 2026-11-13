@@ -244,12 +244,16 @@ describe("UsersAutocomplete tests", () => {
 
     await userEvent.keyboard("{ArrowDown}");
 
+    expect(options[0]).toHaveClass("active");
+    expect(options[1]).not.toHaveClass("active");
     expect(options[0]).toHaveAttribute("aria-selected", "true");
     expect(options[1]).toHaveAttribute("aria-selected", "false");
     expect(input).toHaveAttribute("aria-activedescendant", options[0].id);
 
     await userEvent.keyboard("{ArrowDown}");
 
+    expect(options[0]).not.toHaveClass("active");
+    expect(options[1]).toHaveClass("active");
     expect(options[0]).toHaveAttribute("aria-selected", "false");
     expect(options[1]).toHaveAttribute("aria-selected", "true");
     expect(input).toHaveAttribute("aria-activedescendant", options[1].id);
