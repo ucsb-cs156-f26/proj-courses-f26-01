@@ -1,6 +1,5 @@
 package edu.ucsb.cs156.courses.entities;
 
-import org.hibernate.validator.constraints.UniqueElements;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -25,6 +24,7 @@ public class User {
 
   @Column(unique = true, nullable = false)
   private String email;
+
   private String googleSub;
   private String pictureUrl;
   private String fullName;
