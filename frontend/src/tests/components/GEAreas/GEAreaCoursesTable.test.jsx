@@ -158,7 +158,6 @@ describe("GEAreaCoursesTable tests", () => {
     expect(headers.slice(0, 2)).toEqual(["Quarter", "Session"]);
   });
 
-  //FIXME update transplanted tests from ConvertedSectionTable
   test("renders summer session A and B from sixth character", () => {
     const testid = "GEAreaCoursesTable";
     const courses = [
@@ -182,7 +181,6 @@ describe("GEAreaCoursesTable tests", () => {
 
     render(<GEAreaCoursesTable courses={courses} showSession={true} />);
 
-    screen.debug();
     expect(
       screen.getByTestId(`${testid}-cell-row-0-col-session`),
     ).toHaveTextContent("A");
@@ -193,16 +191,56 @@ describe("GEAreaCoursesTable tests", () => {
 
   test("renders blank session for non-summer or missing session", () => {
     const testid = "GEAreaCoursesTable";
-    const sections = [
-      sectionWith({ quarter: "20231", session: "00000A  " }),
-      sectionWithoutSession(),
-      sectionWith({ session: "" }),
-      sectionWith({ session: "0000" }),
+    const courses = [
+      // non-summer quarter
+      {
+        quarter: "20231",
+        session: "00000A  ",
+        courseId: "MATH 1A",
+        title: "Calculus I",
+        description: "Intro to calculus",
+        generalEducation: ["A1", "B"],
+      },
+      // no session specified
+      {
+        quarter: "20231",
+        courseId: "MATH 1A",
+        title: "Calculus I",
+        description: "Intro to calculus",
+        generalEducation: ["A1", "B"],
+      },
+      // null
+      {
+        quarter: "20233",
+        session: null,
+        courseId: "MATH 1A",
+        title: "Calculus I",
+        description: "Intro to calculus",
+        generalEducation: ["A1", "B"],
+      },
+      // empty string
+      {
+        quarter: "20233",
+        courseId: "CHEM 2B",
+        session: "",
+        title: "General Chemistry",
+        description: "Chemistry fundamentals",
+        generalEducation: [{ geCode: "C1" }, null],
+      },
+      // invalidly formatted string
+      {
+        quarter: "20233",
+        courseId: "CHEM 2B",
+        session: "0000",
+        title: "General Chemistry",
+        description: "Chemistry fundamentals",
+        generalEducation: [{ geCode: "C1" }, null],
+      },
     ];
 
-    render(<GEAreaCoursesTable courses={sections} showSession={true} />);
+    render(<GEAreaCoursesTable courses={courses} showSession={true} />);
 
-    sections.forEach((_section, index) => {
+    courses.forEach((_section, index) => {
       expect(
         screen.getByTestId(`${testid}-cell-row-${index}-col-session`)
           .textContent,
@@ -234,7 +272,6 @@ describe("GEAreaCoursesTable tests", () => {
     }));
   });
 
-  //TODO
   test("renders blank session when section is missing or null", async () => {
     vi.resetModules();
     vi.doMock("main/components/OurTable", () => ({
