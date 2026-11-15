@@ -295,7 +295,7 @@ const personalSectionsFixtures = {
       finalExam: null,
     },
     {
-      quarter: "20221",
+      quarter: "20223",
       courseId: "ECE      10AL",
       title: "FOUNDTN CIRC LAB",
       description:
