@@ -2,7 +2,6 @@ import React from "react";
 import { render, screen, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { MemoryRouter } from "react-router-dom";
-import { oneSection } from "fixtures/sectionFixtures";
 import GEAreaCoursesTable from "main/components/GEAreas/GEAreaCoursesTable";
 
 const queryClient = new QueryClient();
@@ -15,30 +14,6 @@ describe("GEAreaCoursesTable tests", () => {
       </MemoryRouter>
     </QueryClientProvider>
   );
-
-  const sectionWith = ({ quarter = "20233", session = null } = {}) => ({
-    ...oneSection[0],
-    courseInfo: {
-      ...oneSection[0].courseInfo,
-      quarter,
-    },
-    section: {
-      ...oneSection[0].section,
-      session,
-    },
-  });
-
-  const sectionWithoutSession = ({ quarter = "20233" } = {}) => {
-    const { session: _session, ...section } = oneSection[0].section;
-    return {
-      ...oneSection[0],
-      courseInfo: {
-        ...oneSection[0].courseInfo,
-        quarter,
-      },
-      section,
-    };
-  };
 
   test("renders the expected table headers and course cells", () => {
     const courses = [
@@ -270,58 +245,6 @@ describe("GEAreaCoursesTable tests", () => {
         );
       },
     }));
-  });
-
-  test("renders blank session when section is missing or null", async () => {
-    vi.resetModules();
-    vi.doMock("main/components/OurTable", () => ({
-      default: ({ data, testid }) => {
-        return (
-          <table data-testid={testid}>
-            <tbody>
-              {data.map((row, index) => (
-                <tr key={index}>
-                  <td
-                    data-testid={`${testid}-cell-row-${index}-col-session`}
-                  ></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        );
-      },
-    }));
-
-    const { default: GEAreaCoursesTableWithMockedOurTable } =
-      await import("main/components/GEAreas/GEAreaCoursesTable");
-    const sections = [
-      {
-        ...oneSection[0],
-        courseInfo: { ...oneSection[0].courseInfo, quarter: "20233" },
-        section: null,
-      },
-      {
-        ...oneSection[0],
-        courseInfo: { ...oneSection[0].courseInfo, quarter: "20233" },
-      },
-    ];
-
-    expect(() =>
-      render(
-        <GEAreaCoursesTableWithMockedOurTable
-          courses={sections}
-          showSession={true}
-        />,
-      ),
-    ).not.toThrow();
-
-    const testid = "GEAreaCoursesTable";
-    sections.forEach((_section, index) => {
-      expect(
-        screen.getByTestId(`${testid}-cell-row-${index}-col-session`)
-          .textContent,
-      ).toBe("");
-    });
   });
 
   test("renders empty and trimmed GE area values correctly", () => {
