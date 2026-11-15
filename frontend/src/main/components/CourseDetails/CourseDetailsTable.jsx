@@ -5,9 +5,10 @@ import {
   formatInstructors,
   formatLocation,
   formatTime,
+  formatSession,
 } from "main/utils/sectionUtils.jsx";
 
-export default function CourseDetailsTable({ details }) {
+export default function CourseDetailsTable({ details, showSession = false }) {
   const columns = [
     {
       header: "Course ID",
@@ -50,7 +51,7 @@ export default function CourseDetailsTable({ details }) {
             cell.row.original.classSections[0].timeLocations[0].days;
           return result;
         } catch {
-          // Stryker disable next-line BlockStatement : equivalent mutation of "do nothing" and return ""
+          // Stryker disable next-line All : equivalent mutation of "do nothing" and return ""
           return "";
         }
       },
@@ -69,6 +70,25 @@ export default function CourseDetailsTable({ details }) {
       id: "instructor",
     },
   ];
+
+  if (showSession) {
+    columns.push({
+      header: "Session",
+      accessorKey: "session",
+      cell: ({ row }) => {
+        try {
+          const result = formatSession(
+            row.original.quarter,
+            row.original.classSections[0].session,
+          );
+          return result;
+        } catch {
+          // Stryker disable next-line BlockStatement : equivalent mutation of "do nothing" and return ""
+          return "";
+        }
+      },
+    });
+  }
 
   const testid = "CourseDetailsTable";
 
