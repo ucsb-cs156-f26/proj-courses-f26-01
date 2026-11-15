@@ -27,7 +27,7 @@ export default function GEAreaCoursesTable({ courses, showSession = false }) {
   const columns = [
     {
       Header: "Quarter",
-      cell: ({ cell }) => yyyyqToQyy(cell.row.original.quarter),
+      cell: ({ cell }) => yyyyqToQyy(cell.row.original.quarter ? cell.row.original.quarter : ""),
       id: "quarter",
     },
     {
