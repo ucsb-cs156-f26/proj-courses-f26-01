@@ -40,6 +40,9 @@ describe("GEAreaCoursesTable tests", () => {
       screen.getByTestId("GEAreaCoursesTable-header-quarter"),
     ).toHaveTextContent("Quarter");
     expect(
+      screen.queryByTestId("GEAreaCoursesTable-header-session"),
+    ).not.toBeInTheDocument();
+    expect(
       screen.getByTestId("GEAreaCoursesTable-header-courseId"),
     ).toHaveTextContent("Course Id");
     expect(
@@ -81,6 +84,46 @@ describe("GEAreaCoursesTable tests", () => {
         "GEAreaCoursesTable-cell-row-1-col-generalEducationAreas",
       ),
     ).toHaveTextContent(/^C1$/);
+  });
+
+  test("renders session column after Quarter when requested", () => {
+    const courses = [
+      {
+        quarter: "20232",
+        courseId: "MATH 1A",
+        title: "Calculus I",
+        description: "Intro to calculus",
+        generalEducation: ["A1", "B"],
+      },
+      {
+        quarter: "20233",
+        courseId: "CHEM 2B",
+        title: "General Chemistry",
+        description: "Chemistry fundamentals",
+        generalEducation: [{ geCode: "C1" }, null],
+      },
+    ];
+
+    render(<GEAreaCoursesTable courses={courses} showSession={true} />);
+
+    expect(
+      screen.getByTestId("GEAreaCoursesTable-header-quarter"),
+    ).toHaveTextContent("Quarter");
+    expect(
+      screen.getByTestId("GEAreaCoursesTable-header-session"),
+    ).toHaveTextContent("Session");
+    expect(
+      screen.getByTestId("GEAreaCoursesTable-header-courseId"),
+    ).toHaveTextContent("Course Id");
+    expect(
+      screen.getByTestId("GEAreaCoursesTable-header-title"),
+    ).toHaveTextContent("Title");
+    expect(
+      screen.getByTestId("GEAreaCoursesTable-header-description"),
+    ).toHaveTextContent("Description");
+    expect(
+      screen.getByTestId("GEAreaCoursesTable-header-generalEducationAreas"),
+    ).toHaveTextContent("General Education Areas");
   });
 
   test("renders empty and trimmed GE area values correctly", () => {
