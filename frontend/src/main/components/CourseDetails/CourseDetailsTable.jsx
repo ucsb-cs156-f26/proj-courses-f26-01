@@ -51,7 +51,7 @@ export default function CourseDetailsTable({ details, showSession = false }) {
             cell.row.original.classSections[0].timeLocations[0].days;
           return result;
         } catch {
-          // Stryker disable next-line All : equivalent mutation of "do nothing" and return ""
+          // Stryker disable next-line BlockStatement : equivalent mutation of "do nothing" and return ""
           return "";
         }
       },
