@@ -6,6 +6,7 @@ import { ucsbSubjectsFixtures } from "fixtures/ucsbSubjectsFixtures";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
 import { personalSectionsFixtures } from "fixtures/personalSectionsFixtures";
 import { oneQuarterCourse } from "fixtures/gradeHistoryFixtures";
+import { enrollmentDataPointFixtures } from "fixtures/enrollmentDataPointFixtures";
 
 import { http, HttpResponse } from "msw";
 
@@ -64,5 +65,45 @@ Default.parameters = {
         status: 200,
       });
     }),
+
+    http.get("/api/enrollment/search", () => {
+      return HttpResponse.json(
+        enrollmentDataPointFixtures.cmpsc130aMultipleSectionsOverTime,
+      );
+    }),
+  ],
+};
+
+export const SingleSection = Template.bind({});
+
+SingleSection.args = {
+  ...Default.args,
+};
+
+SingleSection.parameters = {
+  ...Default.parameters,
+  msw: [
+    http.get("/api/enrollment/search", () => {
+      return HttpResponse.json(
+        enrollmentDataPointFixtures.cmpsc130aLectureOverTime,
+      );
+    }),
+    ...Default.parameters.msw,
+  ],
+};
+
+export const Empty = Template.bind({});
+
+Empty.args = {
+  ...Default.args,
+};
+
+Empty.parameters = {
+  ...Default.parameters,
+  msw: [
+    http.get("/api/enrollment/search", () => {
+      return HttpResponse.json([]);
+    }),
+    ...Default.parameters.msw,
   ],
 };
