@@ -212,13 +212,20 @@ describe("CSVDownloadsPage tests", () => {
   });
 
   test("enrollment download uses selected quarter and handles errors", async () => {
+    const blobMock = vi.fn(
+      async () => new Blob(["unused"], { type: "text/csv" }),
+    );
     const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue({
       ok: false,
       status: 500,
+      blob: blobMock,
     });
+    const errorSpy = vi.spyOn(globalThis, "Error");
 
     try {
       renderPage();
+
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument();
 
       fireEvent.click(
         screen.getByRole("button", { name: "Enrollment Downloads" }),
@@ -235,9 +242,10 @@ describe("CSVDownloadsPage tests", () => {
         target: { value: "20242" },
       });
 
-      fireEvent.click(
-        screen.getByRole("button", { name: "Download Enrollment CSV" }),
-      );
+      const downloadButton = screen.getByRole("button", {
+        name: "Download Enrollment CSV",
+      });
+      fireEvent.click(downloadButton);
 
       await waitFor(() => {
         expect(fetchMock).toHaveBeenCalledWith(
@@ -249,7 +257,30 @@ describe("CSVDownloadsPage tests", () => {
       expect(await screen.findByRole("alert")).toHaveTextContent(
         "Could not download the enrollment CSV",
       );
+      expect(blobMock).not.toHaveBeenCalled();
+      expect(errorSpy).toHaveBeenCalledWith("Enrollment download failed (500)");
+
+      // Starting another download must clear the previous error immediately.
+      let resolveRetry;
+      fetchMock.mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveRetry = resolve;
+          }),
+      );
+      fireEvent.click(downloadButton);
+
+      await waitFor(() => {
+        expect(fetchMock).toHaveBeenCalledTimes(2);
+        expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+      });
+
+      resolveRetry({ ok: false, status: 500, blob: blobMock });
+      expect(await screen.findByRole("alert")).toHaveTextContent(
+        "Could not download the enrollment CSV",
+      );
     } finally {
+      errorSpy.mockRestore();
       fetchMock.mockRestore();
     }
   });
@@ -264,9 +295,13 @@ describe("CSVDownloadsPage tests", () => {
 
     const createObjectURL = vi.fn(() => "blob:test");
     const revokeObjectURL = vi.fn();
+    let downloadedFilename;
+
     const clickMock = vi
       .spyOn(HTMLAnchorElement.prototype, "click")
-      .mockImplementation(() => {});
+      .mockImplementation(function () {
+        downloadedFilename = this.download;
+      });
 
     const originalCreate = URL.createObjectURL;
     const originalRevoke = URL.revokeObjectURL;
@@ -301,6 +336,7 @@ describe("CSVDownloadsPage tests", () => {
         );
         expect(createObjectURL).toHaveBeenCalledWith(csv);
         expect(clickMock).toHaveBeenCalled();
+        expect(downloadedFilename).toBe("enrollment_20242.csv");
         expect(revokeObjectURL).toHaveBeenCalledWith("blob:test");
       });
     } finally {
