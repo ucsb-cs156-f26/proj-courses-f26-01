@@ -1,4 +1,3 @@
-
 import React from "react";
 
 import CSVDownloadsPage from "main/pages/CSV/CSVDownloadsPage";
@@ -48,10 +47,8 @@ EnrollmentDownloads.parameters = {
 };
 
 EnrollmentDownloads.play = async ({ canvasElement }) => {
-  const button = Array.from(
-    canvasElement.querySelectorAll("button"),
-  ).find((button) =>
-    button.textContent.includes("Enrollment Downloads"),
+  const button = Array.from(canvasElement.querySelectorAll("button")).find(
+    (button) => button.textContent.includes("Enrollment Downloads"),
   );
 
   button?.click();

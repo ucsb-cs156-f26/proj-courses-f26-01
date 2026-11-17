@@ -95,7 +95,9 @@ export default function CSVDownloadsPage({
       link.remove();
       URL.revokeObjectURL(url);
     } catch {
-      setEnrollmentError("Could not download the enrollment CSV. Please try again.");
+      setEnrollmentError(
+        "Could not download the enrollment CSV. Please try again.",
+      );
     }
   };
 
@@ -194,28 +196,28 @@ export default function CSVDownloadsPage({
           </Accordion.Item>
           <Accordion.Item eventKey="enrollment">
             <Accordion.Header>Enrollment Downloads</Accordion.Header>
-              <Accordion.Body>
-                <Form onSubmit={handleEnrollmentSubmit}>
-                  <div className="mb-3">
-                    <SingleQuarterDropdown
-                      quarters={quarters}
-                      quarter={enrollmentQuarter}
-                      setQuarter={setEnrollmentQuarter}
-                      controlId="CSVDownloads.EnrollmentQuarter"
-                    />
+            <Accordion.Body>
+              <Form onSubmit={handleEnrollmentSubmit}>
+                <div className="mb-3">
+                  <SingleQuarterDropdown
+                    quarters={quarters}
+                    quarter={enrollmentQuarter}
+                    setQuarter={setEnrollmentQuarter}
+                    controlId="CSVDownloads.EnrollmentQuarter"
+                  />
+                </div>
+
+                <Button type="submit" variant="primary">
+                  Download Enrollment CSV
+                </Button>
+
+                {enrollmentError && (
+                  <div className="alert alert-danger mt-3" role="alert">
+                    {enrollmentError}
                   </div>
-
-                  <Button type="submit" variant="primary">
-                    Download Enrollment CSV
-                  </Button>
-
-                  {enrollmentError && (
-                    <div className="alert alert-danger mt-3" role="alert">
-                      {enrollmentError}
-                    </div>
-                  )}
-                </Form>
-              </Accordion.Body>
+                )}
+              </Form>
+            </Accordion.Body>
           </Accordion.Item>
         </Accordion>
       </div>
