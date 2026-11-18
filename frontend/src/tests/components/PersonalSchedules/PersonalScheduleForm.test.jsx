@@ -105,7 +105,7 @@ describe("PersonalScheduleForm tests", () => {
     const quarter = document.querySelector("#PersonalScheduleForm-quarter");
     const submitButton = screen.getByTestId("PersonalScheduleForm-submit");
 
-    fireEvent.change(name, { target: { value: "test" } });
+    fireEvent.change(name, { target: { value: "A".repeat(25) } });
     fireEvent.change(description, { target: { value: "test" } });
     fireEvent.change(quarter, { target: { value: "20124" } });
     fireEvent.click(submitButton);
@@ -192,11 +192,11 @@ describe("PersonalScheduleForm tests", () => {
     const nameInput = screen.getByTestId("PersonalScheduleForm-name");
     const submitButton = screen.getByTestId("PersonalScheduleForm-submit");
 
-    fireEvent.change(nameInput, { target: { value: "ThisNameIsWayTooLong" } });
+    fireEvent.change(nameInput, { target: { value: "A".repeat(26) } });
     fireEvent.click(submitButton);
 
     expect(
-      await screen.findByText("Max length 15 characters"),
+      await screen.findByText("Max length 25 characters"),
     ).toBeInTheDocument();
   });
 
