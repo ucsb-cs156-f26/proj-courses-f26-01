@@ -123,6 +123,7 @@ describe("GeneralEducationSearchPage tests", () => {
           options.onSuccess([
             {
               quarter: "20232",
+              // non-summer quarter, no session
               courseId: "MATH 1A",
               title: "Calculus I",
               description: "Intro to calculus",
@@ -134,6 +135,67 @@ describe("GeneralEducationSearchPage tests", () => {
 
     render(<WrappedPage />);
     await userEvent.click(screen.getByText("Search GE"));
+
+    expect(await screen.findByTestId("GEAreaCoursesTable")).toBeInTheDocument();
+    expect(
+      screen.queryByTestId("GEAreaCoursesTable-header-session"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId("GEAreaCoursesTable-cell-row-0-col-session"),
+    ).toHaveTextContent("");
+    expect(
+      screen.queryByText(
+        /No GE courses were found with the specified criteria/i,
+      ),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByTestId("GEAreaCoursesTable-cell-row-0-col-courseId"),
+    ).toHaveTextContent("MATH 1A");
+    expect(
+      screen.getByTestId(
+        "GEAreaCoursesTable-cell-row-0-col-generalEducationAreas",
+      ),
+    ).toHaveTextContent("A1");
+  });
+
+  test("displays and renders correct data to summer session column cells", async () => {
+    useBackendMutationSpy.mockImplementation(
+      (objectToAxiosParams, options) => ({
+        isLoading: false,
+        mutate: () =>
+          options.onSuccess([
+            {
+              quarter: "20233",
+              session: "00000A  ",
+              courseId: "MATH 1A",
+              title: "Calculus I",
+              description: "Intro to calculus",
+              generalEducation: ["A1"],
+            },
+            {
+              quarter: "20231",
+              // non-summer quarter, no session
+              courseId: "MATH 1B",
+              title: "Calculus II",
+              description: "Calculus",
+              generalEducation: ["A1"],
+            },
+          ]),
+      }),
+    );
+
+    render(<WrappedPage />);
+    await userEvent.click(screen.getByText("Search GE"));
+
+    expect(
+      screen.queryByTestId("GEAreaCoursesTable-header-session"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId("GEAreaCoursesTable-cell-row-0-col-session"),
+    ).toHaveTextContent("A");
+    expect(
+      screen.getByTestId("GEAreaCoursesTable-cell-row-1-col-session"),
+    ).toHaveTextContent("");
 
     expect(await screen.findByTestId("GEAreaCoursesTable")).toBeInTheDocument();
     expect(

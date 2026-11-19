@@ -44,7 +44,7 @@ export default function GeneralEducationSearchPage() {
         )}
 
         {!mutation.isLoading && courses.length > 0 && (
-          <GEAreaCoursesTable courses={courses} />
+          <GEAreaCoursesTable courses={courses} showSession />
         )}
       </div>
     </BasicLayout>
