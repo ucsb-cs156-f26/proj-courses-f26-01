@@ -94,4 +94,19 @@ public class UsersController extends ApiController {
     Iterable<User> users = userRepository.findAll(pageRequest);
     return users;
   }
+
+  @Operation(summary = "Search users by name or email")
+  @PreAuthorize("hasRole('ROLE_ADMIN')")
+  @GetMapping("/search")
+  public List<User> searchUsers(@RequestParam String query) {
+    String searchTerm = query.trim();
+
+    if (searchTerm.length() < 2) {
+      return List.of();
+    }
+
+    PageRequest pageRequest = PageRequest.of(0, 10, Direction.ASC, "fullName");
+
+    return userRepository.searchUsers(searchTerm, pageRequest);
+  }
 }
