@@ -124,6 +124,13 @@ export default function AppNavbar({
                 </NavDropdown.Item>
                 <NavDropdown.Item
                   as={Link}
+                  to="/enrollmenthistory"
+                  data-testid="appnavbar-enrollment-history"
+                >
+                  Enrollment History
+                </NavDropdown.Item>
+                <NavDropdown.Item
+                  as={Link}
                   to="/courseovertime/instructorsearch"
                   data-testid="appnavbar-course-over-time-instructor-search"
                 >
