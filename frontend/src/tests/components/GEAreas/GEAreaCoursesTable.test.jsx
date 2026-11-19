@@ -1,8 +1,7 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { MemoryRouter } from "react-router-dom";
-
 import GEAreaCoursesTable from "main/components/GEAreas/GEAreaCoursesTable";
 
 const queryClient = new QueryClient();
@@ -39,6 +38,9 @@ describe("GEAreaCoursesTable tests", () => {
     expect(
       screen.getByTestId("GEAreaCoursesTable-header-quarter"),
     ).toHaveTextContent("Quarter");
+    expect(
+      screen.queryByTestId("GEAreaCoursesTable-header-session"),
+    ).not.toBeInTheDocument();
     expect(
       screen.getByTestId("GEAreaCoursesTable-header-courseId"),
     ).toHaveTextContent("Course Id");
@@ -81,6 +83,168 @@ describe("GEAreaCoursesTable tests", () => {
         "GEAreaCoursesTable-cell-row-1-col-generalEducationAreas",
       ),
     ).toHaveTextContent(/^C1$/);
+  });
+
+  test("renders session column after Quarter when requested", () => {
+    const courses = [
+      {
+        quarter: "20232",
+        courseId: "MATH 1A",
+        title: "Calculus I",
+        description: "Intro to calculus",
+        generalEducation: ["A1", "B"],
+      },
+      {
+        quarter: "20233",
+        courseId: "CHEM 2B",
+        title: "General Chemistry",
+        description: "Chemistry fundamentals",
+        generalEducation: [{ geCode: "C1" }, null],
+      },
+    ];
+
+    render(<GEAreaCoursesTable courses={courses} showSession={true} />);
+
+    expect(
+      screen.getByTestId("GEAreaCoursesTable-header-quarter"),
+    ).toHaveTextContent("Quarter");
+    expect(
+      screen.getByTestId("GEAreaCoursesTable-header-session"),
+    ).toHaveTextContent("Session");
+    expect(
+      screen.getByTestId("GEAreaCoursesTable-header-courseId"),
+    ).toHaveTextContent("Course Id");
+    expect(
+      screen.getByTestId("GEAreaCoursesTable-header-title"),
+    ).toHaveTextContent("Title");
+    expect(
+      screen.getByTestId("GEAreaCoursesTable-header-description"),
+    ).toHaveTextContent("Description");
+    expect(
+      screen.getByTestId("GEAreaCoursesTable-header-generalEducationAreas"),
+    ).toHaveTextContent("General Education Areas");
+
+    const testid = "GEAreaCoursesTable";
+    const headerRow = screen.getByTestId(`${testid}-header-group-0`);
+    const headers = within(headerRow)
+      .getAllByRole("columnheader")
+      .map((header) => header.textContent);
+
+    expect(headers.slice(0, 2)).toEqual(["Quarter", "Session"]);
+  });
+
+  test("renders summer session A and B from sixth character", () => {
+    const testid = "GEAreaCoursesTable";
+    const courses = [
+      {
+        quarter: "20233",
+        session: "00000A  ",
+        courseId: "MATH 1A",
+        title: "Calculus I",
+        description: "Intro to calculus",
+        generalEducation: ["A1", "B"],
+      },
+      {
+        quarter: "20233",
+        courseId: "CHEM 2B",
+        session: "00000B  ",
+        title: "General Chemistry",
+        description: "Chemistry fundamentals",
+        generalEducation: [{ geCode: "C1" }, null],
+      },
+    ];
+
+    render(<GEAreaCoursesTable courses={courses} showSession={true} />);
+
+    expect(
+      screen.getByTestId(`${testid}-cell-row-0-col-session`),
+    ).toHaveTextContent("A");
+    expect(
+      screen.getByTestId(`${testid}-cell-row-1-col-session`),
+    ).toHaveTextContent("B");
+  });
+
+  test("renders blank session for non-summer or missing session", () => {
+    const testid = "GEAreaCoursesTable";
+    const courses = [
+      // non-summer quarter
+      {
+        quarter: "20231",
+        session: "00000A  ",
+        courseId: "MATH 1A",
+        title: "Calculus I",
+        description: "Intro to calculus",
+        generalEducation: ["A1", "B"],
+      },
+      // no session specified
+      {
+        quarter: "20231",
+        courseId: "MATH 1A",
+        title: "Calculus I",
+        description: "Intro to calculus",
+        generalEducation: ["A1", "B"],
+      },
+      // null
+      {
+        quarter: "20233",
+        session: null,
+        courseId: "MATH 1A",
+        title: "Calculus I",
+        description: "Intro to calculus",
+        generalEducation: ["A1", "B"],
+      },
+      // empty string
+      {
+        quarter: "20233",
+        courseId: "CHEM 2B",
+        session: "",
+        title: "General Chemistry",
+        description: "Chemistry fundamentals",
+        generalEducation: [{ geCode: "C1" }, null],
+      },
+      // invalidly formatted string
+      {
+        quarter: "20233",
+        courseId: "CHEM 2B",
+        session: "0000",
+        title: "General Chemistry",
+        description: "Chemistry fundamentals",
+        generalEducation: [{ geCode: "C1" }, null],
+      },
+    ];
+
+    render(<GEAreaCoursesTable courses={courses} showSession={true} />);
+
+    courses.forEach((_section, index) => {
+      expect(
+        screen.getByTestId(`${testid}-cell-row-${index}-col-session`)
+          .textContent,
+      ).toBe("");
+    });
+  });
+
+  test("renders blank session when courseInfo is missing or null", async () => {
+    vi.resetModules();
+    vi.doMock("main/components/OurTable", () => ({
+      default: ({ data, columns, testid }) => {
+        const sessionColumn = columns.find(
+          (column) => column.accessorKey === "session",
+        );
+        return (
+          <table data-testid={testid}>
+            <tbody>
+              {data.map((row, index) => (
+                <tr key={index}>
+                  <td data-testid={`${testid}-cell-row-${index}-col-session`}>
+                    {sessionColumn.cell({ row: { original: row } })}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        );
+      },
+    }));
   });
 
   test("renders empty and trimmed GE area values correctly", () => {
