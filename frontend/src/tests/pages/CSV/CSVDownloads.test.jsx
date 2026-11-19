@@ -83,7 +83,7 @@ describe("CSVDownloadsPage tests", () => {
   test("uses dropdowns for quarters, subject area, and course level", async () => {
     renderPage();
 
-    expect(await screen.findAllByLabelText("Quarter")).toHaveLength(2);
+    expect(await screen.findAllByLabelText("Quarter")).toHaveLength(3);
     const subjectAreaDropdown = screen.getByLabelText("Subject Area");
     const levelDropdown = screen.getByLabelText("Course Level");
     expect(subjectAreaDropdown).toBeInTheDocument();
@@ -209,5 +209,141 @@ describe("CSVDownloadsPage tests", () => {
     renderPage();
     expect(await screen.findByText("CSV Downloads")).toBeInTheDocument();
     expect(screen.getByTestId("CSVDownloads.Quarter")).toBeInTheDocument();
+  });
+
+  test("enrollment download uses selected quarter and handles errors", async () => {
+    const blobMock = vi.fn(
+      async () => new Blob(["unused"], { type: "text/csv" }),
+    );
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: false,
+      status: 500,
+      blob: blobMock,
+    });
+    const errorSpy = vi.spyOn(globalThis, "Error");
+
+    try {
+      renderPage();
+
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+
+      fireEvent.click(
+        screen.getByRole("button", { name: "Enrollment Downloads" }),
+      );
+
+      const quarterDropdown = screen.getAllByLabelText("Quarter")[2];
+
+      await waitFor(() => {
+        expect(
+          quarterDropdown.querySelector('option[value="20242"]'),
+        ).toBeInTheDocument();
+      });
+      fireEvent.change(quarterDropdown, {
+        target: { value: "20242" },
+      });
+
+      const downloadButton = screen.getByRole("button", {
+        name: "Download Enrollment CSV",
+      });
+      fireEvent.click(downloadButton);
+
+      await waitFor(() => {
+        expect(fetchMock).toHaveBeenCalledWith(
+          "/api/enrollment/csv/quarter?yyyyq=20242",
+          { headers: { Accept: "text/csv" } },
+        );
+      });
+
+      expect(await screen.findByRole("alert")).toHaveTextContent(
+        "Could not download the enrollment CSV",
+      );
+      expect(blobMock).not.toHaveBeenCalled();
+      expect(errorSpy).toHaveBeenCalledWith("Enrollment download failed (500)");
+
+      // Starting another download must clear the previous error immediately.
+      let resolveRetry;
+      fetchMock.mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveRetry = resolve;
+          }),
+      );
+      fireEvent.click(downloadButton);
+
+      await waitFor(() => {
+        expect(fetchMock).toHaveBeenCalledTimes(2);
+        expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+      });
+
+      resolveRetry({ ok: false, status: 500, blob: blobMock });
+      expect(await screen.findByRole("alert")).toHaveTextContent(
+        "Could not download the enrollment CSV",
+      );
+    } finally {
+      errorSpy.mockRestore();
+      fetchMock.mockRestore();
+    }
+  });
+
+  test("successfully downloads enrollment CSV", async () => {
+    const csv = new Blob(["test,data"], { type: "text/csv" });
+
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: true,
+      blob: async () => csv,
+    });
+
+    const createObjectURL = vi.fn(() => "blob:test");
+    const revokeObjectURL = vi.fn();
+    let downloadedFilename;
+
+    const clickMock = vi
+      .spyOn(HTMLAnchorElement.prototype, "click")
+      .mockImplementation(function () {
+        downloadedFilename = this.download;
+      });
+
+    const originalCreate = URL.createObjectURL;
+    const originalRevoke = URL.revokeObjectURL;
+    URL.createObjectURL = createObjectURL;
+    URL.revokeObjectURL = revokeObjectURL;
+
+    try {
+      renderPage();
+
+      fireEvent.click(
+        screen.getByRole("button", { name: "Enrollment Downloads" }),
+      );
+
+      const dropdown = screen.getAllByLabelText("Quarter")[2];
+
+      await waitFor(() => {
+        expect(
+          dropdown.querySelector('option[value="20242"]'),
+        ).toBeInTheDocument();
+      });
+
+      fireEvent.change(dropdown, { target: { value: "20242" } });
+
+      fireEvent.click(
+        screen.getByRole("button", { name: "Download Enrollment CSV" }),
+      );
+
+      await waitFor(() => {
+        expect(fetchMock).toHaveBeenCalledWith(
+          "/api/enrollment/csv/quarter?yyyyq=20242",
+          { headers: { Accept: "text/csv" } },
+        );
+        expect(createObjectURL).toHaveBeenCalledWith(csv);
+        expect(clickMock).toHaveBeenCalled();
+        expect(downloadedFilename).toBe("enrollment_20242.csv");
+        expect(revokeObjectURL).toHaveBeenCalledWith("blob:test");
+      });
+    } finally {
+      fetchMock.mockRestore();
+      clickMock.mockRestore();
+      URL.createObjectURL = originalCreate;
+      URL.revokeObjectURL = originalRevoke;
+    }
   });
 });

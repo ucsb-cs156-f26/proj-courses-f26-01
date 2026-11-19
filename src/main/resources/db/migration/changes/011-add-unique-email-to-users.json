@@ -1,0 +1,19 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "011-add-unique-email-to-users",
+        "author": "cdiez",
+        "changes": [
+          {
+            "addUniqueConstraint": {
+              "tableName": "users",
+              "columnNames": "email",
+              "constraintName": "unique_users_email"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
