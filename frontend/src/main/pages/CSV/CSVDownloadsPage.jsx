@@ -40,6 +40,8 @@ export default function CSVDownloadsPage({
   // Stryker restore all
 
   const [quarter, setQuarter] = useState(quarters[0].yyyyq);
+  const [enrollmentQuarter, setEnrollmentQuarter] = useState(quarters[0].yyyyq);
+  const [enrollmentError, setEnrollmentError] = useState("");
   const [subjectArea, setSubjectArea] = useState(
     subjects[0]?.subjectCode || "ANTH",
   );
@@ -67,6 +69,36 @@ export default function CSVDownloadsPage({
   const handleQuarterSubjectSubmit = (e) => {
     e.preventDefault();
     downloadCsv(byQuarterAndSubjectUrl);
+  };
+
+  const handleEnrollmentSubmit = async (e) => {
+    e.preventDefault();
+    setEnrollmentError("");
+
+    try {
+      const response = await fetch(
+        `/api/enrollment/csv/quarter?yyyyq=${encodeURIComponent(enrollmentQuarter)}`,
+        { headers: { Accept: "text/csv" } },
+      );
+
+      if (!response.ok) {
+        throw new Error(`Enrollment download failed (${response.status})`);
+      }
+
+      const csv = await response.blob();
+      const url = URL.createObjectURL(csv);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `enrollment_${enrollmentQuarter}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      setEnrollmentError(
+        "Could not download the enrollment CSV. Please try again.",
+      );
+    }
   };
 
   return (
@@ -159,6 +191,31 @@ export default function CSVDownloadsPage({
                 <Button type="submit" variant="primary">
                   Download CSV
                 </Button>
+              </Form>
+            </Accordion.Body>
+          </Accordion.Item>
+          <Accordion.Item eventKey="enrollment">
+            <Accordion.Header>Enrollment Downloads</Accordion.Header>
+            <Accordion.Body>
+              <Form onSubmit={handleEnrollmentSubmit}>
+                <div className="mb-3">
+                  <SingleQuarterDropdown
+                    quarters={quarters}
+                    quarter={enrollmentQuarter}
+                    setQuarter={setEnrollmentQuarter}
+                    controlId="CSVDownloads.EnrollmentQuarter"
+                  />
+                </div>
+
+                <Button type="submit" variant="primary">
+                  Download Enrollment CSV
+                </Button>
+
+                {enrollmentError && (
+                  <div className="alert alert-danger mt-3" role="alert">
+                    {enrollmentError}
+                  </div>
+                )}
               </Form>
             </Accordion.Body>
           </Accordion.Item>
