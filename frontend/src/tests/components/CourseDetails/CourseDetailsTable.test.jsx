@@ -1,5 +1,5 @@
 import { vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { MemoryRouter } from "react-router-dom";
 
@@ -24,6 +24,18 @@ describe("CourseDetailsTable tests", () => {
   const queryClient = new QueryClient();
 
   const testId = "CourseDetailsTable";
+
+  const sectionWith = ({ quarter = "20233", session = null } = {}) => ({
+    ...personalSectionsFixtures.threeSummerPersonalSections[0],
+    quarter: quarter,
+    classSections: [
+      {
+        ...personalSectionsFixtures.threeSummerPersonalSections[0]
+          .classSections[0],
+        session,
+      },
+    ],
+  });
 
   test("renders without crashing for empty table", () => {
     render(
@@ -104,6 +116,132 @@ describe("CourseDetailsTable tests", () => {
     expect(
       screen.getByTestId(`${testId}-cell-row-0-col-enrolled`),
     ).toHaveTextContent("84/100");
+    expect(
+      screen.queryByTestId(`${testId}-header-session`),
+    ).not.toBeInTheDocument();
+  });
+
+  test("renders session column after Instructor when requested", () => {
+    const testid = "CourseDetailsTable";
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <CourseDetailsTable
+            details={personalSectionsFixtures.threeSummerPersonalSections}
+            showSession
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    const headerRow = screen.getByTestId(`${testid}-header-group-0`);
+    const headers = within(headerRow)
+      .getAllByRole("columnheader")
+      .map((header) => header.textContent);
+
+    expect(headers.slice(-2)).toEqual(["Instructor", "Session"]);
+  });
+
+  test("renders summer session A and B from sixth character", () => {
+    const testid = "CourseDetailsTable";
+    const sections = [
+      sectionWith({ session: "00000A  " }),
+      sectionWith({ session: "00000B  " }),
+    ];
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <CourseDetailsTable details={sections} showSession />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    expect(
+      screen.getByTestId(`${testid}-cell-row-0-col-session`),
+    ).toHaveTextContent("A");
+    expect(
+      screen.getByTestId(`${testid}-cell-row-1-col-session`),
+    ).toHaveTextContent("B");
+  });
+
+  test("renders blank session for non-summer or missing session", () => {
+    const testid = "CourseDetailsTable";
+    const sections = [
+      sectionWith({ quarter: "20231", session: "00000A  " }),
+      sectionWith({ session: null }),
+      sectionWith({ session: "" }),
+      sectionWith({ session: "0000" }),
+    ];
+
+    render(
+      <CourseDetailsTable
+        details={sections}
+        testid={testid}
+        showSession={true}
+      />,
+    );
+
+    sections.forEach((_section, index) => {
+      expect(
+        screen.getByTestId(`${testid}-cell-row-${index}-col-session`)
+          .textContent,
+      ).toBe("");
+    });
+  });
+
+  test("renders blank session when section is missing or null", async () => {
+    vi.resetModules();
+    vi.doMock("main/components/OurTable", () => ({
+      default: ({ data, columns, testid }) => {
+        const sessionColumn = columns.find(
+          (column) => column.accessorKey === "session",
+        );
+        return (
+          <table data-testid={testid}>
+            <tbody>
+              {data.map((row, index) => (
+                <tr key={index}>
+                  <td data-testid={`${testid}-cell-row-${index}-col-session`}>
+                    {sessionColumn.cell({ row: { original: row } })}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        );
+      },
+    }));
+
+    const { default: CourseDetailsTableWithMockedOurTable } =
+      await import("main/components/CourseDetails/CourseDetailsTable");
+    const testid = "CourseDetailsTable";
+    const sections = [
+      {
+        ...personalSectionsFixtures.threeSummerPersonalSections[0],
+        classSections: [], // no sections
+      },
+      {
+        ...personalSectionsFixtures.threeSummerPersonalSections[0],
+        classSections: null, // dangerous null!
+      },
+    ];
+
+    expect(() =>
+      render(
+        <CourseDetailsTableWithMockedOurTable
+          details={sections}
+          showSession={true}
+        />,
+      ),
+    ).not.toThrow();
+
+    sections.forEach((_section, index) => {
+      expect(
+        screen.getByTestId(`${testid}-cell-row-${index}-col-session`)
+          .textContent,
+      ).toBe("");
+    });
   });
 
   test("Has the expected content when days is empty", () => {
