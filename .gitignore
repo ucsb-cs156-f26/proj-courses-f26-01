@@ -21,6 +21,9 @@ frontend/storybook-static
 package-lock.json
 !frontend/package-lock.json
 
+# Temporary files
+*.swp
+
 # Maven
 
 /target
