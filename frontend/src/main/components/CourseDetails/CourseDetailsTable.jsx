@@ -1,96 +1,11 @@
 import React from "react";
 import OurTable from "main/components/OurTable";
-import {
-  convertToFraction,
-  formatInstructors,
-  formatLocation,
-  formatTime,
-  formatSession,
-} from "main/utils/sectionUtils.jsx";
+import { getColumns } from "main/utils/CourseDetailsTable";
 
 export default function CourseDetailsTable({ details, showSession = false }) {
-  const columns = [
-    {
-      header: "Course ID",
-      accessorKey: "courseId",
-    },
-    {
-      header: "Enroll Code",
-      id: "enrollCode",
-      cell: ({ cell }) => cell.row.original.classSections[0].enrollCode,
-    },
-    {
-      header: "Section",
-      id: "section",
-      cell: ({ cell }) => cell.row.original.classSections[0].section,
-    },
-    {
-      header: "Title",
-      accessorKey: "title",
-    },
-    {
-      header: "Enrolled",
-      cell: ({ cell }) =>
-        convertToFraction(
-          cell.row.original.classSections[0].enrolledTotal,
-          cell.row.original.classSections[0].maxEnroll,
-        ),
-      id: "enrolled",
-    },
-    {
-      header: "Location",
-      cell: ({ cell }) =>
-        formatLocation(cell.row.original.classSections[0].timeLocations),
-      id: "location",
-    },
-    {
-      header: "Days",
-      cell: ({ cell }) => {
-        try {
-          const result =
-            cell.row.original.classSections[0].timeLocations[0].days;
-          return result;
-        } catch {
-          // return "" on a fail
-        }
-      },
-      id: "days",
-    },
-    {
-      header: "Time",
-      cell: ({ cell }) =>
-        formatTime(cell.row.original.classSections[0].timeLocations),
-      id: "time",
-    },
-    {
-      header: "Instructor",
-      cell: ({ cell }) =>
-        formatInstructors(cell.row.original.classSections[0].instructors),
-      id: "instructor",
-    },
-  ];
-
-  if (showSession) {
-    columns.push({
-      header: "Session",
-      accessorKey: "session",
-      cell: ({ row }) => {
-        try {
-          const result = formatSession(
-            row.original.quarter,
-            row.original.classSections[0].session,
-          );
-          return result;
-        } catch {
-          // return "" on a fail
-        }
-      },
-    });
-  }
-
   const testid = "CourseDetailsTable";
 
-  const columnsToDisplay = columns;
+  const columnsToDisplay = getColumns(showSession);
 
   return <OurTable data={details} columns={columnsToDisplay} testid={testid} />;
 }

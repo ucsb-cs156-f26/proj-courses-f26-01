@@ -1,10 +1,12 @@
-import { vi } from "vitest";
+import { expect, vi } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { MemoryRouter } from "react-router-dom";
 
-import CourseDetailsTable from "main/components/CourseDetails/CourseDetailsTable";
 import { personalSectionsFixtures } from "fixtures/personalSectionsFixtures";
+
+import CourseDetailsTable from "main/components/CourseDetails/CourseDetailsTable";
+import { getColumns } from "main/utils/CourseDetailsTable";
 
 const mockedNavigate = vi.fn();
 
@@ -47,7 +49,7 @@ describe("CourseDetailsTable tests", () => {
     );
   });
 
-  test("Has the expected colum headers and content", () => {
+  test("Has the expected column headers and content", () => {
     // console.log(oneSection)
     render(
       <QueryClientProvider client={queryClient}>
@@ -256,5 +258,55 @@ describe("CourseDetailsTable tests", () => {
     expect(
       screen.getByTestId(`${testId}-cell-row-0-col-days`),
     ).toHaveTextContent("");
+  });
+
+  test("columns contain session column only when requested", async () => {
+    const columnsWithSession = getColumns(true);
+    const sessionObj = columnsWithSession.filter((obj) => {
+      return obj.id === "session";
+    })?.[0];
+
+    expect(sessionObj).not.toBe(undefined);
+    expect(sessionObj?.id).toBe("session");
+
+    const columnsWithoutSession = getColumns(false);
+    const noSessionArray = columnsWithoutSession.filter((obj) => {
+      return obj.id === "session";
+    });
+
+    expect(noSessionArray.length).toBe(0);
+
+    const columnsWithoutSessionByDefaultArg = getColumns();
+    const noSessionArrayByDefaultArg = columnsWithoutSessionByDefaultArg.filter(
+      (obj) => {
+        return obj.id === "session";
+      },
+    );
+
+    expect(noSessionArrayByDefaultArg.length).toBe(0);
+  });
+
+  test('session cells return "" instead of null for bad inputs', async () => {
+    const mockData = personalSectionsFixtures.singleSection;
+    const columnsFunctions = getColumns(true);
+    const sessionCell = columnsFunctions.filter((obj) => {
+      return obj.id === "session";
+    })?.[0]?.cell;
+
+    expect(sessionCell).not.toBe(undefined);
+
+    const result = sessionCell({ row: mockData });
+    expect(result).toBe("");
+  });
+
+  test('days cells return "" instead of null for bad inputs', async () => {
+    const mockData = personalSectionsFixtures.emptyDays;
+    const columnsFunctions = getColumns();
+    const daysCell = columnsFunctions.filter((obj) => {
+      return obj.id === "days";
+    })?.[0]?.cell;
+
+    const result = daysCell({ row: mockData });
+    expect(result).toBe("");
   });
 });
