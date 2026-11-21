@@ -21,3 +21,9 @@ export const threeCourses = Template.bind({});
 threeCourses.args = {
   details: personalSectionsFixtures.threePersonalSections,
 };
+
+export const SummerCourses = Template.bind({});
+SummerCourses.args = {
+  details: personalSectionsFixtures.threeSummerPersonalSections,
+  showSession: true,
+};
