@@ -280,6 +280,13 @@ describe("AppNavbar tests", () => {
     expect(
       await screen.findByTestId("appnavbar-course-over-time-search"),
     ).toBeInTheDocument();
+
+    const enrollmentHistoryLink = await screen.findByTestId(
+      "appnavbar-enrollment-history",
+    );
+    expect(enrollmentHistoryLink).toBeInTheDocument();
+    expect(enrollmentHistoryLink).toHaveAttribute("href", "/enrollmenthistory");
+    expect(enrollmentHistoryLink).toHaveTextContent("Enrollment History");
   });
 
   test("renders the Instructor Course Over Time menu correctly", async () => {
