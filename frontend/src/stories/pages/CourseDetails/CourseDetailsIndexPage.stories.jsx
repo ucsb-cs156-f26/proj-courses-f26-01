@@ -107,3 +107,43 @@ Empty.parameters = {
     ...Default.parameters.msw,
   ],
 };
+
+export const SummerCourse = Template.bind({});
+SummerCourse.args = {
+  suppressMemoryRouter: true,
+};
+SummerCourse.parameters = {
+  msw: [
+    http.get("/api/UCSBSubjects/all", () => {
+      return HttpResponse.json(ucsbSubjectsFixtures.threeSubjects, {
+        status: 200,
+      });
+    }),
+    http.get("/api/systemInfo", () => {
+      return HttpResponse.json(systemInfoFixtures.showingBoth, {
+        status: 200,
+      });
+    }),
+    http.get("/api/currentUser", () => {
+      return HttpResponse.status(403); // returns 403 when not logged in
+    }),
+    http.get("/api/sections/sectionsearch", () => {
+      return HttpResponse.json(
+        personalSectionsFixtures.threeSummerPersonalSections[0],
+        {
+          status: 200,
+        },
+      );
+    }),
+    http.get("/api/gradehistory/search", () => {
+      return HttpResponse.json(oneQuarterCourse, {
+        status: 200,
+      });
+    }),
+    http.get("/api/public/finalsInfo", () => {
+      return HttpResponse.json(finalsFixtures.cmpsc24_s26, {
+        status: 200,
+      });
+    }),
+  ],
+};

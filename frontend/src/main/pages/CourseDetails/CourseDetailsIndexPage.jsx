@@ -102,7 +102,9 @@ export default function CourseDetailsIndexPage() {
           cardProps={{ className: "py-1 my-4" }}
         />
 
-        {moreDetails && <CourseDetailsTable details={[moreDetails]} />}
+        {moreDetails && (
+          <CourseDetailsTable details={[moreDetails]} showSession />
+        )}
         {moreDetails && <CourseDescriptionTable course={moreDetails} />}
         {moreDetails && <EnrollmentHistoryGraph data={enrollmentHistory} />}
         {gradeHistory && <GradeHistoryGraphs gradeHistory={gradeHistory} />}

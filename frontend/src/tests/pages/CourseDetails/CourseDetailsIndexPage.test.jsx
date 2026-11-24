@@ -1,5 +1,5 @@
 import { vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { MemoryRouter } from "react-router-dom";
 import axios from "axios";
@@ -175,6 +175,22 @@ describe("CourseDetailsIndexPage tests", () => {
     expect(screen.getByText("T R")).toBeInTheDocument();
     expect(screen.getByText("Time")).toBeInTheDocument();
     expect(screen.getByText("2:00 PM - 3:15 PM")).toBeInTheDocument();
+  });
+
+  test("renders session column after Instructor", async () => {
+    renderPage();
+
+    expect(
+      await screen.findByText("Course Details for CHEM 184 W22"),
+    ).toBeInTheDocument();
+
+    const testid = "CourseDetailsTable";
+    const headerRow = screen.getByTestId(`${testid}-header-group-0`);
+    const headers = within(headerRow)
+      .getAllByRole("columnheader")
+      .map((header) => header.textContent);
+
+    expect(headers.slice(-2)).toEqual(["Instructor", "Session"]);
   });
 
   test("Calls grade history api correctly and displays correct information", async () => {
