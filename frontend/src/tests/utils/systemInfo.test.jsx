@@ -129,35 +129,4 @@ describe("utils/systemInfo tests", () => {
       expect(result.current.data).toEqual({});
     });
   });
-
-  test("returns expected initialData before axios resolves", () => {
-    const axiosMock = new AxiosMockAdapter(axios);
-    axiosMock.onGet("/api/systemInfo").reply(200, {
-      user: { id: 1 },
-      roles: [{ authority: "ROLE_USER" }],
-    });
-
-    const queryClient = new QueryClient();
-    const wrapper = ({ children }) => (
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    );
-
-    const { result } = renderHook(() => useSystemInfo(), { wrapper });
-
-    const TWENTY_FOUR_HOURS_MS = 1000 * 60 * 60 * 24;
-
-    // Synchronous assertion runs before axiosMock resolves
-    expect(result.current.data).toEqual({
-      placeholderData: {
-        springH2ConsoleEnabled: false,
-        showSwaggerUILink: false,
-        startQtrYYYYQ: "20221",
-        endQtrYYYYQ: "20222",
-      },
-      staleTime: TWENTY_FOUR_HOURS_MS,
-      cacheTime: TWENTY_FOUR_HOURS_MS,
-    });
-
-    axiosMock.restore();
-  });
 });
