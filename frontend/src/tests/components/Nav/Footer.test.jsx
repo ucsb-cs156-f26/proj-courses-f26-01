@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import Footer, { space } from "main/components/Nav/Footer";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
+import { expect } from "vitest";
 
 describe("Footer tests", () => {
   test("space stands for a space", () => {
@@ -79,6 +80,9 @@ describe("Footer tests", () => {
     expect(
       screen.queryByTestId("footer-feedback-button"),
     ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /feedback/i }),
+    ).not.toBeInTheDocument();
   });
 
   test("Feedback button is not shown when systemInfo.appFeedbackUrl is empty", () => {
@@ -91,6 +95,9 @@ describe("Footer tests", () => {
 
     expect(
       screen.queryByTestId("footer-feedback-button"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /feedback/i }),
     ).not.toBeInTheDocument();
   });
 
@@ -131,13 +138,18 @@ describe("Footer tests", () => {
 
     render(<Footer systemInfo={systemInfo} />);
 
-    fireEvent.click(screen.getByTestId("footer-feedback-button"));
-    expect(screen.getByTestId("footer-feedback-modal-link")).toBeVisible();
+    expect(
+      screen.queryByTestId("footer-feedback-modal"),
+    ).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByTestId("footer-feedback-modal-close-button"));
+    fireEvent.click(screen.getByTestId("footer-feedback-button"));
+    const modal = screen.getByTestId("footer-feedback-modal");
+    expect(modal).toBeVisible();
+
+    fireEvent.keyDown(modal, { key: "Escape", code: "Escape", keyCode: 27 });
 
     expect(
-      screen.queryByTestId("footer-feedback-modal-link"),
+      screen.queryByTestId("footer-feedback-modal"),
     ).not.toBeInTheDocument();
   });
 });

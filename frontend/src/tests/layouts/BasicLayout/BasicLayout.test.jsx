@@ -119,4 +119,26 @@ describe("BasicLayout tests", () => {
       "This is a warning message",
     );
   });
+
+  test("renders without crashing when systemInfo is undefined", async () => {
+    const axiosMock = new AxiosMockAdapter(axios);
+    axiosMock
+      .onGet("/api/currentUser")
+      .reply(200, apiCurrentUserFixtures.userOnly);
+    axiosMock.onGet("/api/health").reply(200, { status: "UP" });
+    axiosMock.onGet("/api/systemInfo").reply(500); // Leaves systemInfo undefined
+
+    const queryClient = new QueryClient();
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <BasicLayout>
+            <div>Test Content</div>
+          </BasicLayout>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    expect(await screen.findByText("Test Content")).toBeInTheDocument();
+  });
 });

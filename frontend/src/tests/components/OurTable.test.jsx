@@ -1,6 +1,6 @@
-import { vi } from "vitest";
+import { expect, test, vi } from "vitest";
 import { render, waitFor, fireEvent, screen } from "@testing-library/react";
-import OurTable, { ButtonColumn } from "main/components/OurTable";
+import OurTable, { ButtonColumn, DateColumn } from "main/components/OurTable";
 import ourTableFixtures from "fixtures/ourTableFixtures";
 import { convertOldStyleColumnsToNewStyle } from "main/components/OurTableUtils";
 
@@ -129,5 +129,13 @@ describe("OurTable tests", () => {
       expect(firstNameHeader).toHaveTextContent("First Name");
       expect(firstNameHeader).toHaveAttribute("style", "cursor: pointer;");
     });
+  });
+
+  test("DateColumn: hour12 option is respected", () => {
+    const column = DateColumn("testColumn", () => "2026-11-25T00:30:45Z");
+    const cellFunction = column.cell;
+
+    const result = cellFunction("this data doesn't matter");
+    expect(result.props.children).toContain("16:30:45");
   });
 });
