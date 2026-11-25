@@ -208,4 +208,28 @@ describe("utils/currentUser tests", () => {
       ).toBeTruthy();
     });
   });
+
+  test("returns expected initialData before axios resolves", () => {
+    const axiosMock = new AxiosMockAdapter(axios);
+    axiosMock.onGet("/api/currentUser").reply(200, {
+      user: { id: 1 },
+      roles: [{ authority: "ROLE_USER" }],
+    });
+
+    const queryClient = new QueryClient();
+    const wrapper = ({ children }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+
+    const { result } = renderHook(() => useCurrentUser(), { wrapper });
+
+    // Synchronous assertion runs before axiosMock resolves
+    expect(result.current.data).toEqual({
+      loggedIn: false,
+      root: null,
+      initialData: true,
+    });
+
+    axiosMock.restore();
+  });
 });

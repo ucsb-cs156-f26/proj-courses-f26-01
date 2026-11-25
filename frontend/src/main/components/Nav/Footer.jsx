@@ -3,9 +3,10 @@ import { Button, Container, Modal } from "react-bootstrap";
 
 export const space = " ";
 
-export default function Footer(systemInfo) {
-  const feedbackUrl = systemInfo?.systemInfo?.appFeedbackUrl;
+export default function Footer({ systemInfo }) {
+  const feedbackUrl = systemInfo?.appFeedbackUrl;
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const handleClose = () => setShowFeedbackModal(false);
 
   return (
     <footer className="bg-light pt-3 pt-md-4 pb-4 pb-md-5">
@@ -36,7 +37,7 @@ export default function Footer(systemInfo) {
           <a
             data-testid="footer-source-code-link"
             href={
-              systemInfo?.systemInfo?.sourceRepo ||
+              systemInfo?.sourceRepo ||
               "https://github.com/ucsb-cs156/proj-courses"
             }
             target="_blank"
@@ -84,7 +85,7 @@ export default function Footer(systemInfo) {
             </Button>
             <Modal
               show={showFeedbackModal}
-              onHide={() => setShowFeedbackModal(false)}
+              onHide={handleClose}
               animation={false}
               data-testid="footer-feedback-modal"
             >
@@ -103,7 +104,7 @@ export default function Footer(systemInfo) {
               <Modal.Footer>
                 <Button
                   variant="secondary"
-                  onClick={() => setShowFeedbackModal(false)}
+                  onClick={handleClose}
                   data-testid="footer-feedback-modal-close-button"
                 >
                   Cancel
@@ -115,7 +116,7 @@ export default function Footer(systemInfo) {
                   rel="noopener noreferrer"
                   target="_blank"
                   variant="primary"
-                  onClick={() => setShowFeedbackModal(false)}
+                  onClick={handleClose}
                 >
                   Open Feedback Form
                 </Button>

@@ -16,7 +16,7 @@ export default function BasicLayout({ children }) {
     ...systemInfo,
     systemMessages: [
       ...healthMessages(health),
-      ...(systemInfo?.systemMessages ?? []),
+      ...(systemInfo.systemMessages ?? []),
     ],
   };
 
